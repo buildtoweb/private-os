@@ -781,7 +781,7 @@ deterministisch: dasselbe Datum liefert immer dieselbe Passage.
   "data": {
     "date": "2026-01-15",
     "available": true,
-    "book": { "title": "Think and Grow Rich", "author": "Napoleon Hill", "year": 6955 },
+    "book": { "title": "Beispieltexte", "author": "Private OS", "year": 2026 },
     "chapter": "Desire",
     "chapter_number": 2,
     "text_de": "<deutscher Text der Passage>",
@@ -790,7 +790,7 @@ deterministisch: dasselbe Datum liefert immer dieselbe Passage.
     "read_minutes": 1,
     "read": false,
     "favorite": false,
-    "summary": "Tagespassage für 2026-01-15 aus \"Think and Grow Rich\", Kapitel 2: Desire (1 Min. Lesezeit). Noch nicht gelesen."
+    "summary": "Tagespassage für 2026-01-15 aus \"Beispieltexte\", Kapitel 2: Anfangen (1 Min. Lesezeit). Noch nicht gelesen."
   },
   "warnings": []
 }

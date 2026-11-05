@@ -1,5 +1,5 @@
 'use client';
-// One excerpt per day from Think and Grow Rich — around forty seconds of real
+// One excerpt per day from the passage corpus — around forty seconds of real
 // reading, not a one-line quote.
 //
 // This is the only place in the dashboard meant for sustained reading, so it
