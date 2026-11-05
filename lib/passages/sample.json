@@ -1,0 +1,34 @@
+{
+  "seed": true,
+  "source": {
+    "id": "sample",
+    "title": "Beispieltexte",
+    "author": "Private OS",
+    "year": 2026,
+    "license": "own-text",
+    "origin": "Für dieses Projekt geschrieben"
+  },
+  "passages": [
+    {
+      "id": "sample-001",
+      "chapter": 0,
+      "chapterTitle": "Anfangen",
+      "en": "A good day rarely starts with motivation. It starts with one small action you have already decided on.\n\nChoose that action the evening before, so the morning asks nothing of you.",
+      "de": "Ein guter Tag beginnt selten mit Motivation. Er beginnt mit einer kleinen Handlung, für die du dich schon entschieden hast.\n\nWähle sie am Abend davor, dann verlangt der Morgen nichts mehr von dir."
+    },
+    {
+      "id": "sample-002",
+      "chapter": 0,
+      "chapterTitle": "Anfangen",
+      "en": "**Consistency** beats intensity. Ten quiet minutes every day will change more than one heroic weekend.\n\nWhen you miss a day, do not make up for it. Simply come back.",
+      "de": "**Beständigkeit** schlägt Intensität. Zehn ruhige Minuten an jedem Tag verändern mehr als ein heldenhaftes Wochenende.\n\nWenn du einen Tag verpasst, hole ihn nicht nach. Komm einfach zurück."
+    },
+    {
+      "id": "sample-003",
+      "chapter": 1,
+      "chapterTitle": "Dranbleiben",
+      "en": "Measure what you can influence, not only what you hope for. Sleep, movement and attention respond to your choices.\n\nThe numbers are a mirror, not a verdict.",
+      "de": "Miss, was du beeinflussen kannst, nicht nur, was du dir erhoffst. Schlaf, Bewegung und Aufmerksamkeit reagieren auf deine Entscheidungen.\n\nDie Zahlen sind ein Spiegel, kein Urteil."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/whoop-sync",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/finance-snapshot",
+      "schedule": "15 23 * * *"
+    },
+    {
+      "path": "/api/cron/todo-reminders",
+      "schedule": "5 0 * * *"
+    }
+  ]
+}

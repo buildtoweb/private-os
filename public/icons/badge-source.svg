@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <mask id="cutout">
+      <rect width="96" height="96" fill="white"/>
+      <circle cx="48" cy="48" r="9" fill="black"/>
+    </mask>
+  </defs>
+  <g fill="white" mask="url(#cutout)">
+    <path d="M48 10c12 0 20 8 20 19 0 12-10 22-20 28-7-10-11-19-10-28 1-11 4-19 10-19Z"/>
+    <path d="M48 10c12 0 20 8 20 19 0 12-10 22-20 28-7-10-11-19-10-28 1-11 4-19 10-19Z" transform="rotate(72 48 48)"/>
+    <path d="M48 10c12 0 20 8 20 19 0 12-10 22-20 28-7-10-11-19-10-28 1-11 4-19 10-19Z" transform="rotate(144 48 48)"/>
+    <path d="M48 10c12 0 20 8 20 19 0 12-10 22-20 28-7-10-11-19-10-28 1-11 4-19 10-19Z" transform="rotate(216 48 48)"/>
+    <path d="M48 10c12 0 20 8 20 19 0 12-10 22-20 28-7-10-11-19-10-28 1-11 4-19 10-19Z" transform="rotate(288 48 48)"/>
+  </g>
+</svg>

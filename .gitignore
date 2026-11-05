@@ -1,0 +1,21 @@
+node_modules
+.next
+.env
+.env.local
+.env*.local
+.vercel
+*.log
+.DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Raw personal health source files (WHOOP exports, blood panels). Imported into
+# Supabase by scripts/import-whoop-history.mjs; never committed.
+scripts/health-data/
+
+# Book source text for the daily passage. Only the generated corpus
+# (lib/passages/*.json) is committed — see scripts/build-passages.mjs.
+scripts/book-source/
+# next-agents-md
+.next-docs/
+/.swc

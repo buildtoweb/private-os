@@ -1,0 +1,981 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── FONTS (self-hosted) ─────────────────── */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-VariableFont_opsz_wght.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Italic-VariableFont_opsz_wght.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-VariableFont_wght.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Italic-VariableFont_wght.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ─── DESIGN TOKENS — Direction C · Tactile ─────────────────────────
+   "App statt Seite." Physically layered, opaque surfaces. Depth comes
+   from light and shadow, never from transparency or blur. Colour is a
+   quiet duotone per domain, not one accent everywhere.
+   See STYLE.md for the rules that govern these. */
+:root {
+  /* Surfaces — five opaque steps, lightest is furthest forward. */
+  --bg:        #141315;
+  --bg-2:      #191719;
+  --surface:   #211f22;
+  --surface-2: #2a272b;
+  --raised:    #322e33;
+
+  /* Ink — three steps, no more. */
+  --fg:        #f5f2f0;
+  --fg-2:      rgba(245,242,240,0.60);
+  --fg-3:      rgba(245,242,240,0.34);
+  --hairline:  rgba(255,255,255,0.055);
+
+  /* Accents — exactly four, each with a fixed meaning.
+     sage = progress/positive · amber = attention · clay = strain/error ·
+     slate = neutral data. Never introduce a fifth. */
+  --sage:   #7ba888;
+  --sage-2: #9dc4a8;
+  --amber:  #e8a33d;
+  --clay:   #c97b5a;
+  --slate:  #7d93b0;
+
+  /* Semantic aliases — call sites use these, never the raw hue. */
+  --success: var(--sage);
+  --warning: var(--amber);
+  --error:   var(--clay);
+  --info:    var(--slate);
+
+  /* Legacy aliases kept so pre-redesign call sites keep resolving.
+     Prefer the semantic names above in new code. */
+  --primary:       var(--sage);
+  --primary-dark:  #6b9878;
+  --primary-pink:  var(--sage-2);
+  --primary-glow:  rgba(123,168,136,0.30);
+  --glass-bg:      var(--surface);
+  --glass-border:  var(--hairline);
+  --glass-blur:    0px;
+
+  /* Elevation — two shadows plus a top lip that fakes a lit edge. */
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.28);
+  --shadow-2: 0 2px 4px rgba(0,0,0,0.38), 0 12px 32px rgba(0,0,0,0.36);
+  --shadow-3: 0 4px 8px rgba(0,0,0,0.40), 0 24px 64px rgba(0,0,0,0.46);
+  --lip:      inset 0 1px 0 rgba(255,255,255,0.055);
+  --well:     inset 0 1px 3px rgba(0,0,0,0.50);
+  --glass-shadow: var(--shadow-1), var(--lip);
+
+  /* Geometry */
+  --r-sheet: 22px;
+  --r-lg:    28px;
+  --r-tile:  18px;
+  --r-well:  16px;
+
+  /* Motion — one spring for state changes, one ease for fades. */
+  --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease:   cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  color-scheme: dark;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.011em;
+  min-height: 100dvh;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-content {
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+}
+
+.offline-banner {
+  position: fixed;
+  z-index: 10020;
+  top: env(safe-area-inset-top);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 24px), 520px);
+  padding: 9px 14px;
+  border-radius: 0 0 14px 14px;
+  background: var(--amber);
+  color: #241807;
+  box-shadow: var(--shadow-2);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+}
+
+@media (display-mode: standalone) {
+  body { overscroll-behavior-y: none; }
+
+  /* Full-screen dialogs are portalled outside `.app-content`, so they need
+     their own notch/Home-Indicator clearance in the installed app. */
+  .safe-modal-overlay {
+    padding-top: max(1rem, env(safe-area-inset-top)) !important;
+    padding-right: max(1rem, env(safe-area-inset-right)) !important;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    padding-left: max(1rem, env(safe-area-inset-left)) !important;
+  }
+}
+
+/* Film grain. The single cheapest way to stop a dark UI reading as flat
+   CSS — it gives the surfaces a material, which is the whole point of C.
+   Fixed, so it does not scroll with content and never repaints on scroll. */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (prefers-reduced-transparency: reduce) { body::before { display: none; } }
+
+::selection { background: rgba(232,163,61,0.26); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* Keep the app above the grain layer. */
+#__next, main, aside, nav, header { position: relative; z-index: 1; }
+
+/* ─── COMPONENTS ──────────────────────────── */
+@layer components {
+  /* `.glass` is a historical name — under C it is an opaque sheet. Kept so
+     older call sites keep working; new code should use `.sheet`. */
+  .glass,
+  .sheet {
+    background: var(--surface);
+    border: none;
+    box-shadow: var(--shadow-1), var(--lip);
+  }
+  .glass-strong,
+  .sheet-lg {
+    background: var(--surface);
+    border: none;
+    box-shadow: var(--shadow-2), var(--lip);
+  }
+  /* A recessed well — inputs, tracks, segmented controls sit in these. */
+  .inset {
+    background: var(--bg-2);
+    border-radius: var(--r-well);
+    box-shadow: var(--well);
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--r-sheet);
+    padding: 20px;
+    box-shadow: var(--shadow-1), var(--lip);
+    transition: box-shadow .22s var(--ease), background .18s var(--ease);
+  }
+  /* Pointer-only lift. Touch devices get the press feedback below instead,
+     because a sticky :hover on iOS leaves cards looking permanently raised. */
+  @media (hover: hover) {
+    .card:hover { box-shadow: var(--shadow-2), var(--lip); }
+  }
+  .card-pad-sm {
+    background: var(--surface);
+    border-radius: var(--r-tile);
+    padding: 12px;
+    box-shadow: var(--shadow-1), var(--lip);
+  }
+
+  /* ── Type ──────────────────────────────────
+     C is iOS-scale and sentence case. No uppercase micro-labels, no
+     letter-spaced small caps — those belong to direction A. */
+  .label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    color: var(--fg-3);
+    text-transform: none;
+  }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-3);
+    letter-spacing: 0.005em;
+  }
+  .h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; color: var(--fg); }
+  @media (min-width: 768px) { .h1 { font-size: 34px; } }
+  .h2 { font-size: 19px; font-weight: 650; letter-spacing: -0.02em; color: var(--fg); }
+  .prose { font-size: 16.5px; line-height: 1.66; color: rgba(245,242,240,0.86); max-width: 68ch; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600;
+    background: var(--surface-2);
+    border: none;
+    color: var(--fg-2);
+    box-shadow: var(--lip);
+  }
+
+  /* ── Buttons — pill, opaque, springy, 44px minimum touch target ── */
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-sm {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 20px; border-radius: 999px;
+    font-size: 14.5px; font-weight: 600;
+    min-height: 44px;
+    font-family: inherit; cursor: pointer; border: none;
+    text-decoration: none; line-height: 1;
+    transition: transform .18s var(--spring), background .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  .btn { background: var(--surface-2); color: var(--fg); box-shadow: var(--shadow-1), var(--lip); }
+  .btn-primary {
+    background: var(--sage);
+    color: #16211a;
+    box-shadow: 0 2px 10px rgba(123,168,136,0.30), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+  .btn-ghost {
+    background: var(--surface-2);
+    color: var(--fg);
+    box-shadow: var(--shadow-1), var(--lip);
+  }
+  @media (hover: hover) {
+    .btn-primary:hover { background: var(--sage-2); }
+    .btn-ghost:hover, .btn:hover { background: var(--raised); }
+  }
+  .btn:active, .btn-primary:active, .btn-ghost:active, .btn-sm:active { transform: scale(0.965); }
+  /* Compact variant — still 36px, above the 32px floor for a secondary control. */
+  .btn-sm {
+    padding: 7px 14px; font-size: 13px; min-height: 36px;
+    background: var(--surface-2); color: var(--fg-2);
+    box-shadow: var(--lip);
+  }
+  @media (hover: hover) { .btn-sm:hover { background: var(--raised); color: var(--fg); } }
+  /* .btn-sm is declared after .btn-primary at the same specificity, so it won the
+     cascade and a "btn-primary btn-sm" pill came out looking like a plain one.
+     Restoring the fill for the combination rather than reordering, so nothing
+     that relies on .btn-sm's size or padding shifts. */
+  .btn-primary.btn-sm {
+    background: var(--sage);
+    color: #16211a;
+    box-shadow: 0 2px 10px rgba(123,168,136,0.30), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+  @media (hover: hover) { .btn-primary.btn-sm:hover { background: var(--sage-2); color: #16211a; } }
+  .btn:disabled, .btn-primary:disabled, .btn-ghost:disabled, .btn-sm:disabled {
+    opacity: 0.45; cursor: not-allowed; transform: none !important;
+  }
+
+  /* ── Inputs — recessed wells, not outlined boxes ── */
+  .input {
+    padding: 12px 14px; border-radius: var(--r-well); font-size: 15px;
+    min-height: 44px;
+    background: var(--bg-2);
+    border: none;
+    box-shadow: var(--well);
+    color: var(--fg); outline: none; width: 100%;
+    transition: box-shadow .18s var(--ease);
+  }
+  .input::placeholder { color: var(--fg-3); }
+  .input:focus {
+    box-shadow: var(--well), 0 0 0 2px rgba(123,168,136,0.45);
+  }
+
+  /* ── Badges — tinted, never saturated ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 650; padding: 3px 8px;
+    border-radius: 999px; line-height: 1.5;
+  }
+  .badge-success { background: rgba(123,168,136,0.18); color: var(--sage-2); }
+  .badge-warning { background: rgba(232,163,61,0.16);  color: #f0bd72; }
+  .badge-error   { background: rgba(201,123,90,0.18);  color: #dda893; }
+  .badge-info    { background: rgba(125,147,176,0.18); color: #a3b6cc; }
+  .badge-muted   { background: var(--surface-2);       color: var(--fg-2); }
+  .badge-brand   { background: rgba(123,168,136,0.18); color: var(--sage-2); }
+
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  /* Stat figures: Inter with tabular lining numerals, so columns line up
+     without dropping to a monospace face. */
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.035em; font-weight: 700; }
+
+  /* ── Tactile primitives ─────────────────────
+     The pressable row and its check disc are C's signature interaction. */
+  .tile {
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; min-height: 62px;
+    padding: 12px 16px;
+    border-radius: var(--r-tile);
+    background: var(--surface-2);
+    box-shadow: var(--shadow-1), var(--lip);
+    text-align: left; border: 0;
+    transition: transform .18s var(--spring), background .18s var(--ease);
+  }
+  .tile:active { transform: scale(0.975); }
+  .tile.is-on { background: var(--raised); }
+  .tile__name { font-size: 15.5px; font-weight: 560; letter-spacing: -0.015em; }
+  .tile__sub  { font-size: 12.5px; color: var(--fg-3); margin-top: 1px; }
+
+  .disc {
+    width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: var(--bg-2);
+    /* Faint outer ring so the empty state still reads as a target. */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.07);
+    color: transparent;
+    transition: all .22s var(--spring);
+  }
+  .tile.is-on .disc, .disc.is-on {
+    background: var(--sage);
+    box-shadow: 0 2px 8px rgba(123,168,136,0.36), inset 0 1px 0 rgba(255,255,255,0.24);
+    color: #16211a;
+  }
+
+  /* Notice sheets. Tactile surfaces carry no borders, so the severity rim is
+     drawn as an inset ring inside the shadow stack instead — same signal,
+     without reintroducing the outlined-box look the redesign removed. */
+  .notice {
+    border-radius: var(--r-sheet);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-1), var(--lip);
+  }
+  .notice--error {
+    background: linear-gradient(168deg, #3a2822, #27201d);
+    box-shadow: var(--shadow-1), var(--lip), inset 0 0 0 1px rgba(201,123,90,0.32);
+  }
+  .notice--warn {
+    background: linear-gradient(168deg, #3a2f1e, #262019);
+    box-shadow: var(--shadow-1), var(--lip), inset 0 0 0 1px rgba(232,163,61,0.30);
+  }
+  .notice--ok {
+    background: linear-gradient(168deg, #24352a, #1c2620);
+    box-shadow: var(--shadow-1), var(--lip), inset 0 0 0 1px rgba(123,168,136,0.30);
+  }
+
+  /* Duotone stat washes — colour per domain, never one accent everywhere. */
+  .wash { border-radius: 20px; padding: 15px 16px; box-shadow: var(--shadow-1), var(--lip); }
+  .wash--sage  { background: linear-gradient(168deg, #24352a, #1c2620); }
+  .wash--amber { background: linear-gradient(168deg, #3a2f1e, #262019); }
+  .wash--clay  { background: linear-gradient(168deg, #3a2822, #27201d); }
+  .wash--slate { background: linear-gradient(168deg, #232d3a, #1d2329); }
+
+  /* Segmented control — iOS style, sitting in a well. */
+  .seg {
+    display: inline-flex; padding: 3px; border-radius: 999px;
+    background: var(--bg-2); box-shadow: var(--well);
+  }
+  .seg button {
+    padding: 8px 16px; border-radius: 999px;
+    font-size: 13px; font-weight: 600;
+    color: var(--fg-2); background: transparent; border: 0;
+    min-height: 38px;
+    transition: all .2s var(--spring);
+  }
+  .seg button.on {
+    background: var(--raised); color: var(--fg);
+    box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* A header control row (buttons + segmented tabs). Tactile's controls are
+     44px pills, which is wider than the old 36px chips — on a 360px phone a
+     three-tab strip plus a button no longer fits. The row scrolls itself
+     rather than letting the page scroll sideways, and bleeds to the screen
+     edges so the last pill is never clipped mid-shape. */
+  .control-row {
+    display: flex; align-items: center; gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: -16px; padding-inline: 16px;
+    padding-block: 4px;
+  }
+  .control-row::-webkit-scrollbar { display: none; }
+  .control-row > * { flex-shrink: 0; }
+  @media (min-width: 768px) {
+    .control-row { overflow-x: visible; margin-inline: 0; padding-inline: 0; }
+  }
+
+  /* Progress track — recessed, sage fill. */
+  .track {
+    height: 8px; border-radius: 999px;
+    background: var(--bg-2); box-shadow: var(--well); overflow: hidden;
+  }
+  .track > i {
+    display: block; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--sage), var(--sage-2));
+    box-shadow: 0 0 12px rgba(123,168,136,0.34);
+    transition: width .52s var(--spring);
+  }
+}
+
+input, button, textarea, select { font: inherit; }
+button { cursor: pointer; }
+
+/* Visible focus for keyboard users — the sage ring, never a browser default. */
+:focus-visible {
+  outline: 2px solid rgba(123,168,136,0.65);
+  outline-offset: 2px;
+}
+
+/* iOS Safari zooms the page when focusing form controls below 16px.
+   Keep pinch zoom available, but render focused mobile fields large enough
+   that typing in reflections does not shift the whole layout. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* ─── ANIMATIONS ──────────────────────────── */
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes scaleIn  { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes shimmer  { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes glowPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(123,168,136,0); } 50% { box-shadow: 0 0 16px 3px rgba(123,168,136,0.38); } }
+@keyframes pulseDot { 0%,100% { opacity: 0.55 } 50% { opacity: 1 } }
+@keyframes checkPop { from { transform: scale(0.5); } to { transform: scale(1); } }
+
+.fade-in   { animation: fadeIn 200ms var(--ease) both; }
+.slide-up  { animation: slideUp 350ms var(--spring) both; }
+.pulse-dot { animation: pulseDot 1.6s ease-in-out infinite; }
+/* Resting state is fully visible; the pop is a non-essential flourish (no fill-mode). */
+.check-pop { animation: checkPop 220ms var(--spring); }
+@media (prefers-reduced-motion: reduce) { .check-pop { animation: none; } }
+
+.shimmer {
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ─── NAVIGATION ─────────────────────────────────────────────────
+   Opaque under C — the frosted-glass rail and blurred tab bar were the
+   most conspicuously "web" thing in the old design. Desktop ≥1024px gets
+   the vertical rail; below that, the bottom tab bar. */
+
+.nav-sidebar {
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.nav-sidebar__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 9999px;
+  background: var(--surface);
+  border: none;
+  box-shadow: var(--shadow-2), var(--lip);
+}
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 9999px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--fg-3);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--lip);
+  transition: transform .18s var(--spring), background .18s var(--ease), color .18s var(--ease);
+  outline: none;
+}
+@media (hover: hover) {
+  .nav-item:hover { background: var(--raised); color: var(--fg); }
+}
+.nav-item:focus-visible { color: var(--fg); }
+.nav-item:active { transform: scale(0.94); }
+.nav-item.is-active {
+  background: var(--sage);
+  color: #16211a;
+  box-shadow: 0 2px 10px rgba(123,168,136,0.34), inset 0 1px 0 rgba(255,255,255,0.24);
+}
+.nav-item.is-active svg { color: #16211a; }
+
+.nav-item__tip {
+  pointer-events: none;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  min-width: max-content;
+  border-radius: 14px;
+  border: none;
+  background: var(--surface-2);
+  padding: 9px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg);
+  box-shadow: var(--shadow-2), var(--lip);
+  opacity: 0;
+  transition: all 0.18s var(--ease);
+  white-space: nowrap;
+}
+.nav-item:hover .nav-item__tip,
+.nav-item:focus-visible .nav-item__tip {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+}
+.nav-item__tip-desc { margin-left: 8px; color: var(--fg-3); font-weight: 500; }
+
+.nav-item__dot {
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: var(--sage-2);
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .nav-item__dot { animation: none; } }
+
+.nav-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--bg-2);
+  border-top: 1px solid var(--hairline);
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.30), 0 -12px 32px rgba(0,0,0,0.34);
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.nav-bottom__grid { display: grid; padding: 8px 6px; }
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--fg-3);
+  transition: color 0.18s var(--ease);
+}
+.nav-tab__icon {
+  height: 38px;
+  width: 38px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  box-shadow: var(--lip);
+  transition: transform .18s var(--spring), background .18s var(--ease), box-shadow .18s var(--ease);
+}
+.nav-tab:active .nav-tab__icon { transform: scale(0.92); }
+.nav-tab.is-active .nav-tab__icon {
+  background: var(--sage);
+  color: #16211a;
+  box-shadow: 0 2px 10px rgba(123,168,136,0.34), inset 0 1px 0 rgba(255,255,255,0.24);
+}
+.nav-tab__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--fg-3);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-tab.is-active { color: var(--fg); }
+.nav-tab.is-active .nav-tab__label { color: var(--fg); }
+
+@media (min-width: 1024px) {
+  .nav-sidebar { display: flex; }
+  .nav-bottom  { display: none; }
+  .app-content {
+    padding-left: calc(5rem + env(safe-area-inset-left));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Scroll-reveal (opt-in via .reveal) */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.stagger-1 { transition-delay: 0.05s; }
+.stagger-2 { transition-delay: 0.12s; }
+.stagger-3 { transition-delay: 0.19s; }
+.stagger-4 { transition-delay: 0.26s; }
+.stagger-5 { transition-delay: 0.33s; }
+
+/* ─── FINANCE ────────────────────────────────────────────────
+   Tactile like the rest of the app: opaque sheets, depth from shadow and the
+   lit top edge, sentence-case labels. One hero, then a two-column workspace. */
+.finance-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.finance-stack { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 20px; }
+.field-label { display: block; margin-bottom: 6px; color: var(--fg-2); font-size: 12.5px; font-weight: 500; }
+.finance-footnote { margin-top: 12px; color: var(--fg-3); font-size: 12px; line-height: 1.45; }
+.finance-inline-link { color: var(--sage-2); font-size: inherit; text-align: left; }
+@media (hover: hover) { .finance-inline-link:hover { text-decoration: underline; } }
+
+/* Segmented controls: a recessed well with a raised pill — neutral, not sage. */
+.finance-seg, .finance-period-selector {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 13px;
+  background: var(--bg-2);
+  box-shadow: var(--well);
+}
+.finance-seg button, .finance-period-selector button {
+  min-width: 40px;
+  min-height: 34px;
+  padding: 6px 11px;
+  border-radius: 10px;
+  color: var(--fg-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background .18s var(--ease), color .18s var(--ease);
+}
+.finance-seg button.is-active, .finance-period-selector button.is-active {
+  background: var(--raised);
+  color: var(--fg);
+  box-shadow: var(--shadow-1), var(--lip);
+}
+.finance-seg--wide { display: flex; width: 100%; }
+.finance-seg--wide button { flex: 1 1 0; }
+
+/* Hero */
+.finance-hero {
+  display: grid;
+  gap: 22px;
+  padding: clamp(20px, 3vw, 30px);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow-2), var(--lip);
+}
+.finance-hero__top { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+.finance-net-worth {
+  display: block;
+  margin-top: 6px;
+  color: var(--fg);
+  font-size: clamp(2.5rem, 6vw, 3.9rem);
+  font-weight: 700;
+  letter-spacing: -.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.finance-hero__deltas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.finance-delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: var(--lip);
+  font-size: 13.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.finance-delta > span:last-child { color: var(--fg-3); font-weight: 500; }
+.finance-alloc__bar { display: flex; gap: 3px; height: 10px; overflow: hidden; border-radius: 99px; background: var(--bg-2); box-shadow: var(--well); }
+.finance-alloc__bar span { min-width: 3px; transition: width .6s var(--ease); }
+.finance-alloc__bar span:first-child { border-radius: 99px 0 0 99px; }
+.finance-alloc__bar span:last-child { border-radius: 0 99px 99px 0; }
+.finance-alloc__legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; }
+.finance-alloc__legend li { display: inline-flex; align-items: center; gap: 7px; color: var(--fg-2); font-size: 13px; }
+.finance-alloc__legend i { width: 8px; height: 8px; border-radius: 99px; }
+.finance-alloc__legend b { color: var(--fg); font-weight: 650; font-variant-numeric: tabular-nums; }
+.finance-hero__foot { color: var(--fg-3); font-size: 12px; }
+
+/* Price alerts on top of a page */
+.price-alert-stack { display: grid; gap: 8px; margin-bottom: 18px; }
+.price-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px 10px 14px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--lip), inset 0 0 0 1px rgba(232,163,61,.35);
+}
+.price-alert__icon { display: grid; flex: 0 0 34px; height: 34px; place-items: center; border-radius: 12px; background: rgba(232,163,61,.14); color: var(--warning); }
+.price-alert__body { display: grid; flex: 1 1 auto; min-width: 0; gap: 2px; color: inherit; text-decoration: none; }
+.price-alert__body strong { overflow: hidden; font-size: 14.5px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.price-alert__body span { color: var(--fg-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.price-alert__close { display: grid; flex: 0 0 44px; height: 44px; place-items: center; border-radius: 14px; color: var(--fg-3); font-size: 24px; line-height: 1; }
+@media (hover: hover) { .price-alert__close:hover { background: var(--surface-2); color: var(--fg); } }
+
+/* Panels */
+.finance-workspace { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 20px; align-items: start; }
+.finance-workspace__main, .finance-workspace__rail { display: grid; min-width: 0; gap: 20px; }
+.finance-panel {
+  min-width: 0;
+  padding: 20px;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--lip);
+}
+.finance-panel--chart { padding-bottom: 12px; }
+.finance-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.finance-panel-head h2 { font-size: 19px; font-weight: 650; letter-spacing: -.02em; }
+.finance-count {
+  display: grid;
+  min-width: 30px;
+  height: 26px;
+  place-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: var(--lip);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Positions, grouped by asset class */
+.finance-groups { display: grid; gap: 18px; }
+.finance-group__head { display: flex; align-items: center; gap: 8px; margin: 0 4px 8px; font-size: 13px; }
+.finance-group__head > i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 99px; }
+.finance-group__name { font-weight: 650; }
+.finance-group__count { color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.finance-group__sum { display: inline-flex; align-items: baseline; gap: 10px; margin-left: auto; color: var(--fg-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.finance-group__sum b { font-weight: 650; }
+.finance-group__share { min-width: 34px; color: var(--fg-3); text-align: right; }
+.finance-position-list { display: grid; gap: 6px; }
+.finance-position {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 11px 14px 11px 11px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  box-shadow: var(--lip);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s var(--ease), transform .18s var(--spring);
+}
+@media (hover: hover) { .finance-position:hover { background: var(--raised); } }
+.finance-position:active { transform: scale(.985); }
+.finance-position:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+.finance-position__identity { min-width: 0; }
+.finance-position__name { overflow: hidden; font-size: 15px; font-weight: 580; text-overflow: ellipsis; white-space: nowrap; }
+.finance-position__meta { overflow: hidden; margin-top: 2px; color: var(--fg-3); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.finance-position__value { display: grid; justify-items: end; gap: 2px; font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.finance-position__value small { color: var(--fg-3); font-size: 12.5px; font-weight: 550; }
+.finance-asset-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 13px;
+  background: var(--raised);
+  box-shadow: var(--lip);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 700;
+}
+.finance-asset-icon--logo { background: var(--fg); }
+.finance-asset-icon img { width: 68%; height: 68%; object-fit: contain; }
+
+/* Period and returns */
+.finance-period-result { display: block; font-size: 30px; font-weight: 700; letter-spacing: -.035em; line-height: 1; font-variant-numeric: tabular-nums; }
+.finance-period-rows { display: grid; }
+.finance-period-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
+.finance-period-rows > div > span:first-child { color: var(--fg-2); }
+.finance-period-rows > div > span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.finance-chart-legend { display: flex; justify-content: center; gap: 15px; height: 22px; color: var(--fg-3); font-size: 12px; }
+.finance-chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.finance-chart-legend i { width: 12px; height: 0; border-top: 2px solid var(--sage-2); }
+.finance-chart-legend i.finance-chart-legend__invested { border-top-color: rgba(255,255,255,.35); border-top-style: dashed; }
+
+/* Activity list */
+.finance-activity-filters { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 10px; }
+.finance-activity-filters input, .finance-activity-filters select { min-width: 0; min-height: 40px; padding: 9px 12px; border-radius: 12px; background: var(--bg-2); box-shadow: var(--well); color: var(--fg); font-size: 13px; }
+.finance-activity-list { max-height: 460px; overflow-y: auto; }
+.finance-activity-row { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-top: 1px solid var(--hairline); }
+.finance-activity-row strong { display: block; overflow: hidden; font-size: 13.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.finance-activity-row span, .finance-activity-row small { display: block; margin-top: 2px; color: var(--fg-3); font-size: 12px; }
+.finance-activity-row__amount { flex: 0 0 auto; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.finance-timeline { position: relative; }
+.finance-timeline::before { content: ''; position: absolute; left: 4px; top: 14px; bottom: 14px; width: 1px; background: var(--hairline); }
+.finance-timeline li { position: relative; display: flex; align-items: center; gap: 11px; padding: 9px 0 9px 20px; }
+.finance-timeline__dot { position: absolute; left: 0; width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 3px var(--surface); }
+
+/* Monthly returns */
+.finance-heatmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+.finance-heatmap__cell { display: flex; flex-direction: column; justify-content: space-between; min-height: 52px; padding: 8px 9px; border-radius: 11px; background: var(--surface-2); }
+.finance-heatmap__cell span { color: var(--fg-2); font-size: 11.5px; }
+.finance-heatmap__cell strong { margin-top: 4px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.finance-analysis__drawdown-head { display: flex; justify-content: space-between; margin-top: 18px; color: var(--fg-2); font-size: 13px; }
+.finance-analysis__drawdown-head strong { color: var(--error); font-variant-numeric: tabular-nums; }
+.finance-analysis__chart { height: 150px; margin-top: 8px; }
+
+/* Sheets: position detail and the add sheet */
+.finance-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(8,7,8,.78);
+}
+.finance-detail, .finance-sheet {
+  width: min(760px, 100%);
+  max-height: min(92dvh, 940px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(18px, 3vw, 28px);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow-3), var(--lip);
+}
+.finance-sheet { width: min(460px, 100%); }
+.finance-detail__head, .finance-sheet__head { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.finance-sheet__head { margin-bottom: 16px; }
+.finance-detail__title { overflow: hidden; font-size: 21px; font-weight: 650; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; }
+.finance-close {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--surface-2);
+  box-shadow: var(--lip);
+  color: var(--fg-2);
+  font-size: 24px;
+  line-height: 1;
+}
+@media (hover: hover) { .finance-close:hover { background: var(--raised); color: var(--fg); } }
+.finance-detail__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+.finance-detail__stats > div { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 12px; border-radius: 15px; background: var(--surface-2); box-shadow: var(--lip); }
+.finance-detail__stats > div > span { color: var(--fg-3); font-size: 12px; }
+.finance-detail__stats strong { display: grid; gap: 2px; font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.finance-detail__stats small { color: var(--fg-3); font-size: 12px; font-weight: 500; }
+.finance-cash-detail { display: grid; justify-items: start; gap: 15px; margin-top: 18px; padding: 16px; border-radius: 16px; background: var(--surface-2); }
+.finance-detail__chart-head { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-top: 24px; }
+.finance-detail__price { display: flex; align-items: baseline; gap: 10px; font-size: 24px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.finance-detail__price span { font-size: 14px; font-weight: 650; }
+.finance-detail__chart { height: 260px; margin-top: 12px; }
+.finance-detail__empty { display: grid; height: 100%; place-items: center; color: var(--fg-3); font-size: 13px; text-align: center; }
+.finance-trade-legend { display: flex; gap: 14px; margin-top: 6px; color: var(--fg-3); font-size: 12px; }
+.finance-trade-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.finance-trade-legend i { width: 9px; height: 9px; border-radius: 50%; }
+.finance-trade-legend__buy { background: #9dc4a8; }
+.finance-trade-legend__sell { background: var(--amber); }
+.finance-detail__section { margin-top: 24px; }
+.finance-detail__section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; margin-bottom: 8px; }
+.finance-detail__section-head h3 { font-size: 16px; font-weight: 650; }
+.finance-detail__alert-form { margin-top: 10px; padding: 14px; border-radius: 16px; background: var(--surface-2); box-shadow: var(--lip); }
+.finance-detail__transactions > div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: start; gap: 14px; padding: 10px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
+.finance-detail__transactions > div > span:nth-child(2) { color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.finance-detail__transactions > div > span:last-child { display: grid; justify-items: end; font-weight: 600; font-variant-numeric: tabular-nums; }
+.finance-detail__transactions small { display: block; margin-top: 2px; color: var(--fg-3); font-size: 12px; font-weight: 500; }
+.finance-alert-list { display: grid; gap: 6px; }
+.finance-alert-list li { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 8px 8px 12px; border-radius: 15px; background: var(--surface-2); box-shadow: var(--lip); }
+.finance-alert-list__icon { display: grid; flex: 0 0 32px; height: 32px; place-items: center; border-radius: 11px; background: rgba(232,163,61,.13); color: var(--warning); }
+.finance-alert-list strong { display: block; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.finance-alert-list small { display: block; color: var(--fg-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.finance-alert-list__remove { min-height: 40px; padding: 0 12px; border-radius: 12px; color: var(--fg-3); font-size: 13px; }
+@media (hover: hover) { .finance-alert-list__remove:hover { background: var(--raised); color: var(--error); } }
+.finance-new-asset-fields { display: grid; gap: 12px; padding: 14px; border-radius: 16px; background: var(--surface-2); box-shadow: var(--lip); }
+
+@media (min-width: 1100px) {
+  .finance-workspace { grid-template-columns: minmax(0, 1.65fr) minmax(320px, .75fr); }
+}
+@media (max-width: 767px) {
+  .finance-shell { padding: 18px 16px 28px; }
+  .finance-page-head { margin-bottom: 14px; }
+  .finance-stack, .finance-workspace, .finance-workspace__main, .finance-workspace__rail { gap: 14px; }
+  .finance-hero { gap: 18px; padding: 20px 18px; border-radius: 24px; }
+  .finance-hero__top { flex-direction: column; }
+  .finance-hero__top .finance-period-selector, .finance-detail .finance-period-selector { display: flex; width: 100%; }
+  .finance-hero__top .finance-period-selector button, .finance-detail .finance-period-selector button { flex: 1 1 auto; min-width: 0; padding: 6px 4px; font-size: 12px; }
+  .finance-net-worth { font-size: clamp(2.5rem, 12vw, 3.3rem); }
+  .finance-panel { padding: 16px; border-radius: 20px; }
+  .finance-group__share, .finance-position__gain-eur { display: none; }
+  .finance-position { gap: 11px; padding: 10px 12px 10px 10px; }
+  .finance-overlay { align-items: stretch; padding: 0; }
+  .finance-detail, .finance-sheet {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 22px);
+    border-radius: 0;
+  }
+  .finance-detail__head, .finance-sheet__head {
+    position: sticky;
+    top: calc(-1 * (env(safe-area-inset-top) + 8px));
+    z-index: 2;
+    margin: 0 -16px;
+    padding: calc(env(safe-area-inset-top) + 8px) 16px 12px;
+    background: var(--surface);
+  }
+  .finance-detail__title { font-size: 18px; }
+  .finance-detail__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
+  .finance-detail__chart { height: 230px; }
+  .finance-activity-filters { grid-template-columns: 1fr; }
+}
+
+/* Respect the OS setting globally — C leans on springs, so this matters. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
